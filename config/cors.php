@@ -2,7 +2,7 @@
 
 return [
 
-    'paths' => ['api/*', 'email/verify/*', 'forgot-password', 'reset-password'],
+    'paths' => ['api/*'],
 
     'allowed_methods' => ['*'],
 

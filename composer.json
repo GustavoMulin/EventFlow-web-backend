@@ -1,17 +1,15 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "eventflow/api",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "EventFlow — event management API.",
     "keywords": [
         "laravel",
-        "framework"
+        "eventflow"
     ],
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "laravel/chisel": "^0.1.0",
-        "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13.17",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0"

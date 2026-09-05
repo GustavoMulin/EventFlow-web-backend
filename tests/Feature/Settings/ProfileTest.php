@@ -22,24 +22,7 @@ class ProfileTest extends TestCase
             ->assertOk()
             ->assertJsonPath('user.name', 'Updated Name');
 
-        $user->refresh();
-        $this->assertSame('updated@example.com', $user->email);
-        $this->assertNull($user->email_verified_at);
-    }
-
-    public function test_email_verification_status_is_kept_when_email_is_unchanged(): void
-    {
-        $user = User::factory()->create();
-        $verifiedAt = $user->email_verified_at;
-
-        $this->actingAs($user, 'sanctum')
-            ->patchJson('/api/user/profile', [
-                'name' => 'Updated Name',
-                'email' => $user->email,
-            ])
-            ->assertOk();
-
-        $this->assertEquals($verifiedAt, $user->fresh()->email_verified_at);
+        $this->assertSame('updated@example.com', $user->fresh()->email);
     }
 
     public function test_profile_update_requires_a_unique_email(): void
@@ -52,29 +35,7 @@ class ProfileTest extends TestCase
             ->assertStatus(422)->assertJsonValidationErrors('email');
     }
 
-    public function test_user_can_delete_their_account(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user, 'sanctum')
-            ->deleteJson('/api/user', ['password' => 'password'])
-            ->assertNoContent();
-
-        $this->assertDatabaseMissing('users', ['id' => $user->id]);
-    }
-
-    public function test_account_deletion_requires_the_correct_password(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user, 'sanctum')
-            ->deleteJson('/api/user', ['password' => 'wrong-password'])
-            ->assertStatus(422)->assertJsonValidationErrors('password');
-
-        $this->assertDatabaseHas('users', ['id' => $user->id]);
-    }
-
-    public function test_guests_cannot_access_profile_endpoints(): void
+    public function test_guests_cannot_update_the_profile(): void
     {
         $this->patchJson('/api/user/profile', ['name' => 'X', 'email' => 'x@example.com'])
             ->assertUnauthorized();

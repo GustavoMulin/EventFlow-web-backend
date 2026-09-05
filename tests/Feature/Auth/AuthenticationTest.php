@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -15,13 +14,10 @@ class AuthenticationTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->postJson('/api/login', [
+        $this->postJson('/api/login', [
             'email' => $user->email,
             'password' => 'password',
-        ]);
-
-        $response->assertOk()
-            ->assertJsonStructure(['token', 'user' => ['id', 'email']]);
+        ])->assertOk()->assertJsonStructure(['token', 'user' => ['id', 'email']]);
 
         $this->assertCount(1, $user->fresh()->tokens);
     }
@@ -48,48 +44,6 @@ class AuthenticationTest extends TestCase
             ->assertStatus(429);
     }
 
-    public function test_users_with_two_factor_enabled_must_provide_a_code(): void
-    {
-        $user = User::factory()->withTwoFactor()->create();
-
-        $this->postJson('/api/login', [
-            'email' => $user->email,
-            'password' => 'password',
-        ])->assertOk()->assertExactJson(['two_factor' => true]);
-
-        $this->assertCount(0, $user->fresh()->tokens);
-    }
-
-    public function test_users_can_complete_the_two_factor_challenge_with_a_valid_code(): void
-    {
-        $user = User::factory()->withTwoFactor()->create();
-
-        $code = app(Google2FA::class)
-            ->getCurrentOtp(decrypt($user->two_factor_secret));
-
-        $this->postJson('/api/login', [
-            'email' => $user->email,
-            'password' => 'password',
-            'code' => $code,
-        ])->assertOk()->assertJsonStructure(['token']);
-    }
-
-    public function test_users_can_complete_the_two_factor_challenge_with_a_recovery_code(): void
-    {
-        $user = User::factory()->withTwoFactor()->create();
-        $user->forceFill([
-            'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1', 'recovery-code-2'])),
-        ])->save();
-
-        $this->postJson('/api/login', [
-            'email' => $user->email,
-            'password' => 'password',
-            'recovery_code' => 'recovery-code-1',
-        ])->assertOk()->assertJsonStructure(['token']);
-
-        $this->assertNotContains('recovery-code-1', $user->fresh()->recoveryCodes());
-    }
-
     public function test_authenticated_user_can_be_retrieved(): void
     {
         $user = User::factory()->create();
@@ -97,8 +51,12 @@ class AuthenticationTest extends TestCase
         $this->actingAs($user, 'sanctum')
             ->getJson('/api/user')
             ->assertOk()
-            ->assertJsonPath('user.id', $user->id)
-            ->assertJsonPath('two_factor_enabled', false);
+            ->assertJsonPath('user.id', $user->id);
+    }
+
+    public function test_guests_cannot_retrieve_the_user(): void
+    {
+        $this->getJson('/api/user')->assertUnauthorized();
     }
 
     public function test_users_can_logout_and_the_token_is_revoked(): void
