@@ -24,6 +24,8 @@ trait PasswordValidationRules
      */
     protected function currentPasswordRules(): array
     {
-        return ['required', 'string', 'current_password'];
+        // API requests authenticate with the "sanctum" guard, so the current
+        // password must be checked against that guard's user.
+        return ['required', 'string', 'current_password:sanctum'];
     }
 }

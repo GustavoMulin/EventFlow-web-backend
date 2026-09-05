@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +26,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        $this->configureNotificationUrls();
     }
 
     /**
@@ -46,5 +49,20 @@ class AppServiceProvider extends ServiceProvider
                 ->uncompromised()
             : null,
         );
+    }
+
+    /**
+     * Point user-facing auth links at the SPA instead of the API.
+     */
+    protected function configureNotificationUrls(): void
+    {
+        ResetPassword::createUrlUsing(function (CanResetPassword $notifiable, string $token): string {
+            $query = http_build_query([
+                'token' => $token,
+                'email' => $notifiable->getEmailForPasswordReset(),
+            ]);
+
+            return rtrim((string) config('app.frontend_url'), '/').'/reset-password?'.$query;
+        });
     }
 }

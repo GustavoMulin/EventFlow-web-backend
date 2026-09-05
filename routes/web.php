@@ -2,8 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return response()->json(['message' => 'API is running']);
-});
-
-require __DIR__ . '/settings.php';
+Route::get('/', fn () => response()->json([
+    'name' => config('app.name'),
+    'status' => 'ok',
+]))->name('home');

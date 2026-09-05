@@ -2,38 +2,54 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Laravel\Fortify\Features;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
+    public function test_new_users_can_register_and_receive_a_token(): void
     {
-        parent::setUp();
+        Event::fake();
 
-        $this->skipUnlessFortifyHas(Features::registration());
-    }
-
-    public function test_registration_screen_can_be_rendered()
-    {
-        $response = $this->get(route('register'));
-
-        $response->assertOk();
-    }
-
-    public function test_new_users_can_register()
-    {
-        $response = $this->post(route('register.store'), [
+        $response = $this->postJson('/api/register', [
             'name' => 'Test User',
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $response->assertCreated()
+            ->assertJsonStructure(['token', 'user' => ['id', 'name', 'email']])
+            ->assertJsonPath('user.email', 'test@example.com');
+
+        $this->assertDatabaseHas('users', ['email' => 'test@example.com']);
+        Event::assertDispatched(Registered::class);
+    }
+
+    public function test_registration_requires_a_confirmed_password(): void
+    {
+        $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'nope',
+        ])->assertStatus(422)->assertJsonValidationErrors('password');
+    }
+
+    public function test_registration_rejects_a_duplicate_email(): void
+    {
+        User::factory()->create(['email' => 'taken@example.com']);
+
+        $this->postJson('/api/register', [
+            'name' => 'Test User',
+            'email' => 'taken@example.com',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertStatus(422)->assertJsonValidationErrors('email');
     }
 }

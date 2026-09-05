@@ -2,11 +2,11 @@
 
 return [
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout', 'register', 'forgot-password', 'reset-password', 'user/*', 'two-factor-*', 'passkeys/*'],
+    'paths' => ['api/*', 'email/verify/*', 'forgot-password', 'reset-password'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173'],
+    'allowed_origins' => array_map('trim', explode(',', (string) env('FRONTEND_URL', 'http://localhost:5173'))),
 
     'allowed_origins_patterns' => [],
 
@@ -16,6 +16,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => true,
+    // Token (Bearer) auth — no cookies are exchanged, so credentials are not needed.
+    'supports_credentials' => false,
 
 ];
