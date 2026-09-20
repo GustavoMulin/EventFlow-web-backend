@@ -41,7 +41,8 @@ class AuthenticationTest extends TestCase
         }
 
         $this->postJson('/api/login', ['email' => $user->email, 'password' => 'password'])
-            ->assertStatus(429);
+            ->assertStatus(429)
+            ->assertJsonPath('message', 'Muitas tentativas. Aguarde um instante e tente novamente.');
     }
 
     public function test_authenticated_user_can_be_retrieved(): void

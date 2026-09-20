@@ -103,7 +103,7 @@ class EventoTest extends TestCase
 
     public function test_detalhe_de_evento_inexistente_retorna_404(): void
     {
-        $this->getJson('/api/eventos/9999')->assertNotFound();
+        $this->getJson('/api/eventos/9999')->assertNotFound()->assertJsonPath('message', 'Recurso não encontrado.');
     }
 
     // ---------- criação ----------
