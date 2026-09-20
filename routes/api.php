@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
 use App\Http\Controllers\Api\EventoController;
+use App\Http\Controllers\Api\InscricaoController;
 use App\Http\Controllers\Api\LocalController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,13 @@ Route::get('locais', [LocalController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
+| Inscrição pública
+|--------------------------------------------------------------------------
+*/
+Route::post('eventos/{evento}/inscricoes', [InscricaoController::class, 'store'])->middleware('throttle:20,1');
+
+/*
+|--------------------------------------------------------------------------
 | Área autenticada (Sanctum bearer token)
 |--------------------------------------------------------------------------
 */
@@ -46,4 +54,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('locais', LocalController::class)
         ->parameters(['locais' => 'local'])
         ->only(['show', 'store', 'update', 'destroy']);
+
+    // Participantes inscritos
+    Route::get('eventos/{evento}/inscricoes', [InscricaoController::class, 'index']);
+    Route::delete('inscricoes/{inscricao}', [InscricaoController::class, 'destroy']);
 });
