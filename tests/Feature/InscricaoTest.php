@@ -109,6 +109,29 @@ class InscricaoTest extends TestCase
             ->assertJsonStructure(['data' => [['codigo', 'nome', 'email', 'documento', 'inscrito_em']]]);
     }
 
+    public function test_baixa_o_ingresso_em_pdf_pelo_codigo(): void
+    {
+        $inscricao = Inscricao::factory()->create(['nome' => 'João da Silva', 'documento' => '000.000.000-00']);
+
+        $resposta = $this->get("/api/inscricoes/{$inscricao->codigo}/ingresso");
+
+        $resposta->assertOk()->assertHeader('content-type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', $resposta->getContent());
+        $this->assertStringContainsString('attachment', (string) $resposta->headers->get('content-disposition'));
+    }
+
+    public function test_ingresso_com_codigo_inexistente_retorna_404(): void
+    {
+        $this->get('/api/inscricoes/00000000-0000-0000-0000-000000000000/ingresso')->assertNotFound();
+    }
+
+    public function test_ingresso_nao_e_acessivel_pelo_id_numerico(): void
+    {
+        $inscricao = Inscricao::factory()->create();
+
+        $this->get("/api/inscricoes/{$inscricao->id}/ingresso")->assertNotFound();
+    }
+
     public function test_usuario_cancela_uma_inscricao(): void
     {
         $inscricao = Inscricao::factory()->create();

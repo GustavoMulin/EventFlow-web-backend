@@ -28,10 +28,11 @@ Route::get('locais', [LocalController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
-| Inscrição pública
+| Inscrição pública e ingresso (PDF)
 |--------------------------------------------------------------------------
 */
 Route::post('eventos/{evento}/inscricoes', [InscricaoController::class, 'store'])->middleware('throttle:20,1');
+Route::get('inscricoes/{inscricao}/ingresso', [InscricaoController::class, 'ingresso']);
 
 /*
 |--------------------------------------------------------------------------

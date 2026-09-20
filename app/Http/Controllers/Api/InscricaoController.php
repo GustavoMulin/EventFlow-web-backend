@@ -7,9 +7,12 @@ use App\Http\Requests\InscricaoRequest;
 use App\Http\Resources\InscricaoResource;
 use App\Models\Evento;
 use App\Models\Inscricao;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class InscricaoController extends Controller
@@ -57,6 +60,22 @@ class InscricaoController extends Controller
         return InscricaoResource::make($inscricao->load('evento.local'))
             ->response()
             ->setStatusCode(201);
+    }
+
+    /**
+     * Gera e baixa o ingresso (PDF) da inscrição. O acesso é pelo código (UUID) da inscrição.
+     */
+    public function ingresso(Inscricao $inscricao): Response
+    {
+        $inscricao->load(['evento.categoria', 'evento.local']);
+        $evento = $inscricao->evento;
+
+        $arquivo = 'ingresso-'.Str::slug($evento->nome).'-'.Str::substr($inscricao->codigo, 0, 8).'.pdf';
+
+        return Pdf::loadView('pdf.ingresso', [
+            'inscricao' => $inscricao,
+            'evento' => $evento,
+        ])->setPaper('a4')->download($arquivo);
     }
 
     /**
