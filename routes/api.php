@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\LocalController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,10 +16,11 @@ Route::post('login', [AuthController::class, 'login'])->middleware('throttle:log
 
 /*
 |--------------------------------------------------------------------------
-| Leitura pública: categorias
+| Leitura pública: categorias, locais
 |--------------------------------------------------------------------------
 */
 Route::get('categorias', [CategoriaController::class, 'index']);
+Route::get('locais', [LocalController::class, 'index']);
 
 /*
 |--------------------------------------------------------------------------
@@ -33,4 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Categorias
     Route::apiResource('categorias', CategoriaController::class)->only(['show', 'store', 'update', 'destroy']);
+
+    // Locais (o parâmetro da rota é "local", não "locai")
+    Route::apiResource('locais', LocalController::class)
+        ->parameters(['locais' => 'local'])
+        ->only(['show', 'store', 'update', 'destroy']);
 });
