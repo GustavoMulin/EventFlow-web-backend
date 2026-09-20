@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoriaController;
+use App\Http\Controllers\Api\EventoController;
 use App\Http\Controllers\Api\LocalController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -16,9 +17,11 @@ Route::post('login', [AuthController::class, 'login'])->middleware('throttle:log
 
 /*
 |--------------------------------------------------------------------------
-| Leitura pública: categorias, locais
+| Leitura pública: eventos, categorias, locais
 |--------------------------------------------------------------------------
 */
+Route::get('eventos', [EventoController::class, 'index']);
+Route::get('eventos/{evento}', [EventoController::class, 'show']);
 Route::get('categorias', [CategoriaController::class, 'index']);
 Route::get('locais', [LocalController::class, 'index']);
 
@@ -32,6 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('user', [AuthController::class, 'user']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::patch('user/profile', [ProfileController::class, 'update']);
+
+    // Eventos (criar / editar / excluir)
+    Route::apiResource('eventos', EventoController::class)->only(['store', 'update', 'destroy']);
 
     // Categorias
     Route::apiResource('categorias', CategoriaController::class)->only(['show', 'store', 'update', 'destroy']);
